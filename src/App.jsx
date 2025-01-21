@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import Auth from "./components/auth";
 import { db } from "./config/firebase";
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, addDoc } from "firebase/firestore";
 
 function App() {
   const [movieList, setMovieList] = useState([]);
+
+  //New Movie States
+  const [newMovieTitle, setNewMovieTitle] = useState("");
+  const [newReleaseDate, setNewReleaseDate] = useState(0);
+  const [oscar, setOscar] = useState(false);
 
   const moviesCollectionRef = collection(db, "movies");
 
@@ -30,10 +35,44 @@ function App() {
     getMovie();
   }, []);
 
+  const onSubmitMovie = async () => {
+    try {
+      await addDoc(moviesCollectionRef, {
+        title: newMovieTitle,
+        releaseDate: newReleaseDate,
+        receiveaAnOscar: oscar,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <div className="App">
         <Auth />
+
+        {/* UI to create new movie */}
+        <div>
+          <input
+            placeholder="Movie title.."
+            onChange={(e) => setNewMovieTitle(e.target.value)}
+          />
+          <input
+            placeholder="Release date.."
+            type="number"
+            onChange={(e) => setNewReleaseDate(Number(e.target.value))}
+          />
+          <input
+            type="checkbox"
+            checked={oscar}
+            onChange={(e) => setOscar(e.target.checked)}
+          />
+          <label>Received an Oscar</label>
+          <button onClick={onSubmitMovie}>Submit Movie</button>
+        </div>
+
+        {/* UI to read and display movie */}
         <div>
           {movieList.map((movie) => (
             <div key={movie.id}>
@@ -47,7 +86,6 @@ function App() {
       </div>
     </>
   );
-
 }
 
 export default App;
