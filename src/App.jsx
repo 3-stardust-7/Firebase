@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import Auth from "./components/auth";
 import { db } from "./config/firebase";
-import { getDocs, collection, addDoc } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 function App() {
   const [movieList, setMovieList] = useState([]);
@@ -35,15 +41,53 @@ function App() {
     getMovie();
   }, []);
 
+  // const onSubmitMovie = async () => {
+  //   try {
+  //     await addDoc(moviesCollectionRef, {
+  //       title: newMovieTitle,
+  //       releaseDate: newReleaseDate,
+  //       receivedAnOscar: oscar, // Correct property name
+  //     });
+
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
   const onSubmitMovie = async () => {
     try {
-      await addDoc(moviesCollectionRef, {
+      const newMovie = {
         title: newMovieTitle,
         releaseDate: newReleaseDate,
-        receiveaAnOscar: oscar,
-      });
+        receivedAnOscar: oscar,
+      };
+
+      // Add the new movie to Firestore
+      const docRef = await addDoc(moviesCollectionRef, newMovie);
+
+      // Update the local state
+      setMovieList((prev) => [
+        ...prev,
+        { ...newMovie, id: docRef.id }, // Include the id from Firestore
+      ]);
+
+      // Optionally, clear the input fields
+      setNewMovieTitle("");
+      setNewReleaseDate(0);
+      setOscar(false);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const deleteMovie = async (id) => {
+    try {
+      const movieDoc = doc(db, "movies", id); // Correctly reference the document
+      await deleteDoc(movieDoc); // Delete the document from Firestore
+
+      // Update the local state to remove the deleted movie
+      setMovieList((prev) => prev.filter((movie) => movie.id !== id));
+    } catch (error) {
+      console.error("Error deleting movie:", error);
     }
   };
 
@@ -80,6 +124,10 @@ function App() {
                 {movie.title}
               </h1>
               <p>Date: {movie.releaseDate}</p>
+
+              <button onClick={() => deleteMovie(movie.id)}>
+                Delete Movie
+              </button>
             </div>
           ))}
         </div>
