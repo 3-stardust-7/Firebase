@@ -18,6 +18,9 @@ function App() {
   const [newReleaseDate, setNewReleaseDate] = useState(0);
   const [oscar, setOscar] = useState(false);
 
+  //UPDATE TITLE STATE
+  const [update, setUpdate] = useState(false);
+
   const moviesCollectionRef = collection(db, "movies");
 
   useEffect(() => {
@@ -53,6 +56,7 @@ function App() {
   //     console.error(error);
   //   }
   // };
+
   const onSubmitMovie = async () => {
     try {
       const newMovie = {
@@ -80,6 +84,18 @@ function App() {
   };
 
   const deleteMovie = async (id) => {
+    try {
+      const movieDoc = doc(db, "movies", id); // Correctly reference the document
+      await deleteDoc(movieDoc); // Delete the document from Firestore
+
+      // Update the local state to remove the deleted movie
+      setMovieList((prev) => prev.filter((movie) => movie.id !== id));
+    } catch (error) {
+      console.error("Error deleting movie:", error);
+    }
+  };
+
+  const updateTitle = async (id) => {
     try {
       const movieDoc = doc(db, "movies", id); // Correctly reference the document
       await deleteDoc(movieDoc); // Delete the document from Firestore
@@ -127,6 +143,11 @@ function App() {
 
               <button onClick={() => deleteMovie(movie.id)}>
                 Delete Movie
+              </button>
+
+              <input placeholder="New title..." />
+              <button onChange={(e) => setUpdate(e.target.value)}>
+                Update Title
               </button>
             </div>
           ))}
